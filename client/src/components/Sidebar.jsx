@@ -15,12 +15,14 @@ const Sidebar = ({ setSelectedConversation, onlineUsers }) => {
     try {
       const conversation = await createConversation(userId);
 
-      setSelectedConversation(conversation);
-
       const data = await getConversations();
 
       setConversations(data);
 
+      const selected = data.find((c) => c._id === conversation._id);
+
+      setSelectedConversation(selected);
+      
       setQuery("");
       setUsers([]);
     } catch (error) {

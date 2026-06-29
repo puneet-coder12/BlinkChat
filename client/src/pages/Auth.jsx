@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { generateKeyPair } from "../utils/crypto";
+import {
+  generateRSAKeyPair,
+  exportPublicKey,
+  exportPrivateKey,
+  saveKeys,
+} from "../crypto";
 import { loginUser, registerUser } from "../services/authServices.js";
 
 const Auth = () => {
@@ -23,15 +28,19 @@ const Auth = () => {
           password,
         });
       } else {
-        const { publicKey, privateKey } = generateKeyPair();
+        const { publicKey, privateKey } = await generateRSAKeyPair();
 
-        localStorage.setItem("privateKey", privateKey);
+        const exportedPublic = await exportPublicKey(publicKey);
+
+        const exportedPrivate = await exportPrivateKey(privateKey);
+
+        saveKeys(exportedPublic, exportedPrivate);
 
         data = await registerUser({
           username,
           email,
           password,
-          publicKey,
+          publicKey: exportedPublic,
         });
       }
 
