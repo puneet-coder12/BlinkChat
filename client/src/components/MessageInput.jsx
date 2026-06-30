@@ -11,6 +11,7 @@ function MessageInput({
     useState("");
 
   const handleSend = async () => {
+    // console.log("Selected Conversation:", selectedConversation);
     if (
       !content.trim() ||
       !selectedConversation

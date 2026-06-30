@@ -1,7 +1,38 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { decryptConversationMessage } from "../hooks/useEncryption";
 
 function MessageList({ messages }) {
   const messagesEndRef = useRef(null);
+
+  const [decryptedMessages, setDecryptedMessages] = useState({});
+
+  useEffect(() => {
+    const decryptAllMessages = async () => {
+      const decrypted = {};
+
+      for (const message of messages) {
+        try {
+          const text =
+            await decryptConversationMessage(message);
+
+          decrypted[message._id] = text;
+        } catch (error) {
+          console.error(
+            "Failed to decrypt message:",
+            error
+          );
+
+          decrypted[message._id] =
+            "[Unable to decrypt]";
+        }
+      }
+
+      setDecryptedMessages(decrypted);
+    };
+
+    decryptAllMessages();
+  }, [messages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -12,28 +43,45 @@ function MessageList({ messages }) {
   return (
     <div className="flex-1 p-4 overflow-y-auto">
       {messages.map((message) => {
-        const isMe = message.senderId._id === localStorage.getItem("userId");
+        const senderId =
+          typeof message.senderId === "string"
+            ? message.senderId
+            : message.senderId._id;
+
+        const isMe =
+          senderId ===
+          localStorage.getItem("userId");
 
         return (
           <div
             key={message._id}
-            className={`flex mb-2 ${isMe ? "justify-end" : "justify-start"}`}
+            className={`flex mb-2 ${
+              isMe
+                ? "justify-end"
+                : "justify-start"
+            }`}
           >
             <div
               className={`px-4 py-2 rounded-lg max-w-xs ${
-                isMe ? "bg-blue-500 text-white" : "bg-gray-200"
+                isMe
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200"
               }`}
             >
-              <div>
-                <p>{message.content}</p>
+              <p>
+                {decryptedMessages[
+                  message._id
+                ] || "Decrypting..."}
+              </p>
 
-                <p className="text-xs mt-1 opacity-70 text-right">
-                  {new Date(message.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
+              <p className="text-xs mt-1 opacity-70 text-right">
+                {new Date(
+                  message.createdAt
+                ).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
             </div>
           </div>
         );

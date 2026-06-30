@@ -40,7 +40,10 @@ export const getMyConversations = async (req, res) => {
       participants: req.user._id,
     })
       .populate("participants", "username email profilePic publicKey")
-      .populate("lastMessage", "encryptedContent createdAt")
+      .populate(
+        "lastMessage",
+        "encryptedContent encryptedKeys iv senderId createdAt",
+      )
       .sort({ updatedAt: -1 });
 
     res.status(200).json(conversations);

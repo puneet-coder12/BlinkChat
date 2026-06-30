@@ -12,65 +12,36 @@ import {
 /**
  * Encrypt a message for a conversation
  */
-export const encryptForConversation = async (
-  text,
-  conversation
-) => {
-  const currentUserId =
-    localStorage.getItem("userId");
+export const encryptForConversation = async (text, conversation) => {
+  const currentUserId = localStorage.getItem("userId");
 
-  const sender =
-    conversation.participants.find(
-      (user) => user._id === currentUserId
-    );
+  const sender = conversation.participants.find(
+    (user) => user._id === currentUserId,
+  );
 
-  const receiver =
-    conversation.participants.find(
-      (user) => user._id !== currentUserId
-    );
+  const receiver = conversation.participants.find(
+    (user) => user._id !== currentUserId,
+  );
 
   if (!sender || !receiver) {
-    throw new Error(
-      "Conversation participants not found"
-    );
+    throw new Error("Conversation participants not found");
   }
 
   // Generate AES Key
-  const aesKey =
-    await generateAESKey();
+  const aesKey = await generateAESKey();
 
   // Encrypt Message
-  const {
-    encryptedContent,
-    iv,
-  } = await encryptMessage(
-    text,
-    aesKey
-  );
+  const { encryptedContent, iv } = await encryptMessage(text, aesKey);
 
   // Import Public Keys
-  const senderPublicKey =
-    await importPublicKey(
-      sender.publicKey
-    );
+  const senderPublicKey = await importPublicKey(sender.publicKey);
 
-  const receiverPublicKey =
-    await importPublicKey(
-      receiver.publicKey
-    );
+  const receiverPublicKey = await importPublicKey(receiver.publicKey);
 
   // Encrypt AES Key
-  const senderEncryptedKey =
-    await encryptAESKey(
-      aesKey,
-      senderPublicKey
-    );
+  const senderEncryptedKey = await encryptAESKey(aesKey, senderPublicKey);
 
-  const receiverEncryptedKey =
-    await encryptAESKey(
-      aesKey,
-      receiverPublicKey
-    );
+  const receiverEncryptedKey = await encryptAESKey(aesKey, receiverPublicKey);
 
   return {
     encryptedContent,
@@ -87,30 +58,21 @@ export const encryptForConversation = async (
 /**
  * Decrypt a message
  */
-export const decryptConversationMessage =
-  async (message) => {
-    const currentUserId =
-      localStorage.getItem("userId");
+export const decryptConversationMessage = async (message) => {
+  const currentUserId = localStorage.getItem("userId");
+  const senderId =
+    typeof message.senderId === "string"
+      ? message.senderId
+      : message.senderId._id;
 
-    const encryptedKey =
-      message.senderId._id === currentUserId
-        ? message.encryptedKeys.sender
-        : message.encryptedKeys.receiver;
+  const encryptedKey =
+    senderId === currentUserId
+      ? message.encryptedKeys.sender
+      : message.encryptedKeys.receiver;
 
-    const privateKey =
-      await importPrivateKey(
-        loadPrivateKey()
-      );
+  const privateKey = await importPrivateKey(loadPrivateKey());
 
-    const aesKey =
-      await decryptAESKey(
-        encryptedKey,
-        privateKey
-      );
+  const aesKey = await decryptAESKey(encryptedKey, privateKey);
 
-    return await decryptMessage(
-      message.encryptedContent,
-      aesKey,
-      message.iv
-    );
-  };
+  return await decryptMessage(message.encryptedContent, aesKey, message.iv);
+};

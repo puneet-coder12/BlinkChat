@@ -5,7 +5,11 @@ import MessageInput from "./MessageInput";
 
 import { getMessages } from "../services/messageService";
 
-function ChatWindow({ selectedConversation }) {
+function ChatWindow({
+  selectedConversation,
+  conversations,
+  setConversations,
+}) {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
@@ -26,21 +30,40 @@ function ChatWindow({ selectedConversation }) {
     fetchMessages();
   }, [selectedConversation]);
 
-  useEffect(() => {
+useEffect(() => {
+  const handleReceiveMessage = (message) => {
+    setMessages((prev) => [...prev, message]);
+
+    setConversations((prev) =>
+      prev.map((conversation) => {
+        if (
+          conversation._id !==
+          message.conversationId
+        ) {
+          return conversation;
+        }
+
+        return {
+          ...conversation,
+          lastMessage: message,
+          updatedAt: message.createdAt,
+        };
+      })
+    );
+  };
+
   socket.on(
     "receive_message",
-    (message) => {
-      setMessages((prev) => [
-        ...prev,
-        message,
-      ]);
-    }
+    handleReceiveMessage
   );
 
   return () => {
-    socket.off("receive_message");
+    socket.off(
+      "receive_message",
+      handleReceiveMessage
+    );
   };
-}, []);
+}, [setConversations]);
 
   if (!selectedConversation) {
     return (
@@ -55,9 +78,11 @@ function ChatWindow({ selectedConversation }) {
       <MessageList messages={messages} />
 
       <MessageInput
-        selectedConversation={selectedConversation}
-        setMessages={setMessages}
-      />
+  selectedConversation={selectedConversation}
+  setMessages={setMessages}
+  conversations={conversations}
+  setConversations={setConversations}
+/>
     </div>
   );
 }

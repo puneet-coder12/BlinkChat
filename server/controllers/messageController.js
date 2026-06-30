@@ -3,30 +3,28 @@ import Conversation from "../models/Conversation.js";
 
 export const sendMessage = async (req, res) => {
   try {
-    const {
-  conversationId,
-  encryptedContent,
-  encryptedKeys,
-  iv,
-} = req.body;
+    const { conversationId, encryptedContent, encryptedKeys, iv } = req.body;
 
     const message = await Message.create({
-  conversationId,
-  senderId: req.user._id,
-  encryptedContent,
-  encryptedKeys,
-  iv,
-});
+      conversationId,
+      senderId: req.user._id,
+      encryptedContent,
+      encryptedKeys,
+      iv,
+    });
 
-    await Conversation.findByIdAndUpdate(
-  conversationId,
-  {
-    lastMessage: message._id,
-    updatedAt: new Date(),
-  }
-);
+    await Conversation.findByIdAndUpdate(conversationId, {
+      lastMessage: message._id,
+      updatedAt: new Date(),
+    });
 
-    res.status(201).json(message);
+    // Return populated message
+    const populatedMessage = await Message.findById(message._id).populate(
+      "senderId",
+      "_id username publicKey",
+    );
+
+    res.status(201).json(populatedMessage);
   } catch (error) {
     console.error(error);
     res.status(500).json({
