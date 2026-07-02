@@ -2,57 +2,40 @@ import { useState } from "react";
 import socket from "../socket";
 import { sendMessage } from "../services/messageService";
 import { encryptForConversation } from "../hooks/useEncryption";
+import { useAuth } from "../context/AuthContext";
 
-function MessageInput({
-  selectedConversation,
-  setMessages,
-}) {
-  const [content, setContent] =
-    useState("");
+function MessageInput({ selectedConversation, setMessages }) {
+  const { user } = useAuth();
+  const [content, setContent] = useState("");
 
   const handleSend = async () => {
     // console.log("Selected Conversation:", selectedConversation);
-    if (
-      !content.trim() ||
-      !selectedConversation
-    )
-      return;
+    if (!content.trim() || !selectedConversation) return;
 
     try {
       // Encrypt using our hook
-      const encrypted =
-        await encryptForConversation(
-          content,
-          selectedConversation
-        );
-
-      // Save to backend
-      const message =
-        await sendMessage({
-          conversationId:
-            selectedConversation._id,
-
-          ...encrypted,
-        });
-
-      // Realtime
-      socket.emit(
-        "send_message",
-        message
+      const encrypted = await encryptForConversation(
+        content,
+        selectedConversation,
+        user._id,
       );
 
+      // Save to backend
+      const message = await sendMessage({
+        conversationId: selectedConversation._id,
+
+        ...encrypted,
+      });
+
+      // Realtime
+      socket.emit("send_message", message);
+
       // Add locally
-      setMessages((prev) => [
-        ...prev,
-        message,
-      ]);
+      setMessages((prev) => [...prev, message]);
 
       setContent("");
     } catch (error) {
-      console.error(
-        "Send Message Error:",
-        error
-      );
+      console.error("Send Message Error:", error);
     }
   };
 
@@ -61,17 +44,12 @@ function MessageInput({
       <input
         type="text"
         value={content}
-        onChange={(e) =>
-          setContent(e.target.value)
-        }
+        onChange={(e) => setContent(e.target.value)}
         placeholder="Type message..."
         className="border p-2 flex-1"
       />
 
-      <button
-        onClick={handleSend}
-        className="bg-black text-white px-4 rounded"
-      >
+      <button onClick={handleSend} className="bg-black text-white px-4 rounded">
         Send
       </button>
     </div>

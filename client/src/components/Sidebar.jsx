@@ -5,7 +5,7 @@ import {
   getConversations,
   createConversation,
 } from "../services/conversationService";
-
+import { useAuth } from "../context/AuthContext";
 import { decryptConversationMessage } from "../hooks/useEncryption";
 
 const Sidebar = ({
@@ -22,8 +22,9 @@ const Sidebar = ({
   const [lastMessages, setLastMessages] =
     useState({});
 
-  const currentUserId =
-    localStorage.getItem("userId");
+const { user } = useAuth();
+
+const currentUserId = user?._id;
 
   const handleUserClick = async (
     userId
@@ -108,8 +109,9 @@ const Sidebar = ({
               conversation._id
             ] =
               await decryptConversationMessage(
-                conversation.lastMessage
-              );
+    conversation.lastMessage,
+    user._id,
+);
           } catch (error) {
             previews[
               conversation._id

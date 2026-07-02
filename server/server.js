@@ -14,7 +14,7 @@ dotenv.config();
 
 const app = express();
 
-// app.use(cookieParser());
+app.use(cookieParser());
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
@@ -46,7 +46,8 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.CLIENT_URL,
+    credentials: true,
   },
 });
 

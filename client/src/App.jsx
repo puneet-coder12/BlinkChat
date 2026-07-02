@@ -1,29 +1,47 @@
 import "./App.css";
-import { useEffect, useState } from "react";
-import socket from "./socket";
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
-import Auth from "./pages/Auth.jsx";
-import Chat from "./pages/Chat.jsx";
+
+import socket from "./socket";
+
+import Auth from "./pages/Auth";
+import Chat from "./pages/Chat";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const { user, loading } = useAuth();
+
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Connected:", socket.id);
     });
 
-    return () => {
-      socket.off("connect");
-    };
+    return () => socket.off("connect");
   }, []);
 
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Auth />} />
-        <Route path="/chat" element={<Chat />} />
-      </Routes>
-    </>
+    <Routes>
+      <Route path="/" element={user ? <Chat /> : <Auth />} />
+
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 

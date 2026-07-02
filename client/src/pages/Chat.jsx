@@ -3,22 +3,27 @@ import socket from "../socket";
 
 import Sidebar from "../components/Sidebar";
 import ChatWindow from "../components/ChatWindow";
-
+import { useAuth } from "../context/AuthContext";
 import { getConversations } from "../services/conversationService";
 
 function Chat() {
   const [selectedConversation, setSelectedConversation] = useState(null);
-
+const { user } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   const [conversations, setConversations] = useState([]);
 
-  useEffect(() => {
-    socket.emit(
-      "user_online",
-      localStorage.getItem("userId")
-    );
-  }, []);
+useEffect(() => {
+  if (!user) return;
+
+  socket.connect();
+
+  socket.emit("user_online");
+
+  return () => {
+    socket.disconnect();
+  };
+}, [user]);
 
   useEffect(() => {
     socket.on("online_users", (users) => {
