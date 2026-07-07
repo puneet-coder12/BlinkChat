@@ -1,10 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
+import { logoutUser } from "../services/authServices";
+import socket from "../socket";
 import axiosInstance from "../lib/axios";
 
 const AuthContext = createContext();
@@ -31,17 +28,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = async () => {
-    try {
-      await axiosInstance.post("/auth/logout");
-    } catch (error) {}
+  try {
+    await logoutUser();
+  } catch (error) {
+    console.log(error);
+  }
 
-    setUser(null);
+  socket.disconnect();
 
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    localStorage.removeItem("publicKey");
-    localStorage.removeItem("privateKey");
-  };
+  localStorage.removeItem("userId");
+  localStorage.removeItem("username");
+
+  setUser(null);
+};
 
   return (
     <AuthContext.Provider

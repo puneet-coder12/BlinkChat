@@ -9,6 +9,7 @@ function MessageList({ messages }) {
   const [decryptedMessages, setDecryptedMessages] = useState({});
 
   useEffect(() => {
+    if (!user) return;
     const decryptAllMessages = async () => {
       const decrypted = {};
 
@@ -28,7 +29,7 @@ function MessageList({ messages }) {
     };
 
     decryptAllMessages();
-  }, [messages]);
+  }, [messages, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({

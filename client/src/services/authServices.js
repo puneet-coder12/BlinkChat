@@ -20,3 +20,8 @@ export const registerUser = async (
 
   return response.data;
 };
+
+export const logoutUser = async () => {
+  const response = await axiosInstance.post("/auth/logout");
+  return response.data;
+};

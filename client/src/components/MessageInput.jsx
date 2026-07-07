@@ -9,35 +9,28 @@ function MessageInput({ selectedConversation, setMessages }) {
   const [content, setContent] = useState("");
 
   const handleSend = async () => {
-    // console.log("Selected Conversation:", selectedConversation);
-    if (!content.trim() || !selectedConversation) return;
+  if (!content.trim() || !selectedConversation) return;
 
-    try {
-      // Encrypt using our hook
-      const encrypted = await encryptForConversation(
-        content,
-        selectedConversation,
-        user._id,
-      );
+  try {
+    const encrypted = await encryptForConversation(
+      content,
+      selectedConversation,
+      user._id
+    );
 
-      // Save to backend
-      const message = await sendMessage({
-        conversationId: selectedConversation._id,
+    const message = await sendMessage({
+      conversationId: selectedConversation._id,
+      ...encrypted,
+    });
 
-        ...encrypted,
-      });
+    // Optimistic update
+    setMessages((prev) => [...prev, message]);
 
-      // Realtime
-      socket.emit("send_message", message);
-
-      // Add locally
-      setMessages((prev) => [...prev, message]);
-
-      setContent("");
-    } catch (error) {
-      console.error("Send Message Error:", error);
-    }
-  };
+    setContent("");
+  } catch (error) {
+    console.error("Send Message Error:", error);
+  }
+};
 
   return (
     <div className="border-t p-4 flex gap-2">

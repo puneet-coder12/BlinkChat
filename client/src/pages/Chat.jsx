@@ -5,25 +5,26 @@ import Sidebar from "../components/Sidebar";
 import ChatWindow from "../components/ChatWindow";
 import { useAuth } from "../context/AuthContext";
 import { getConversations } from "../services/conversationService";
+import { useNavigate } from "react-router-dom";
 
 function Chat() {
   const [selectedConversation, setSelectedConversation] = useState(null);
-const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const { user, logout } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   const [conversations, setConversations] = useState([]);
 
-useEffect(() => {
-  if (!user) return;
+  useEffect(() => {
+    if (!user) return;
 
-  socket.connect();
+    socket.connect();
 
-  socket.emit("user_online");
-
-  return () => {
-    socket.disconnect();
-  };
-}, [user]);
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
 
   useEffect(() => {
     socket.on("online_users", (users) => {
@@ -48,8 +49,21 @@ useEffect(() => {
     fetchConversations();
   }, []);
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
+
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex relative">
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="absolute top-4 right-4 z-50 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow"
+      >
+        Logout
+      </button>
+
       <Sidebar
         conversations={conversations}
         setConversations={setConversations}
